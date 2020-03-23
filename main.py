@@ -1,8 +1,9 @@
 import sys
+from PyQt5.QtWidgets import QMessageBox
 
 from MainWindow import *
-
 from csv_parser import CsvReader
+
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
@@ -11,18 +12,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
 
         self.current_reader = CsvReader()
-        self.set_table_labels()
 
         self.ui.pushButton.clicked.connect(self.file_dialog)
 
     def set_table_labels(self):
-        headers = self.current_reader.get_dataset().keys()
+        try:
+            headers = self.current_reader.get_dataset().keys()
+        except ValueError:
+            QMessageBox.about(self, 'Fatal Error', 'Value error raised while file reading')
+            return
+        self.ui.label.setText(self.current_reader.get_filepath())
         self.ui.tableWidget.setColumnCount(len(headers))
         self.ui.tableWidget.setRowCount(len(self.current_reader.get_dataset()))
         self.ui.tableWidget.setHorizontalHeaderLabels(headers)
         for i in range(len(self.current_reader.get_dataset())):
             for j in range(len(self.current_reader.get_dataset().columns)):
-                self.ui.tableWidget.setItem(i, j, QtWidgets.QTableWidgetItem(str(self.current_reader.get_dataset().iloc[i, j])))
+                self.ui.tableWidget.setItem(
+                    i, j,
+                    QtWidgets.QTableWidgetItem(str(self.current_reader.get_dataset().iloc[i, j]))
+                                           )
         self.ui.tableWidget.resizeColumnsToContents()
 
     def file_dialog(self):
